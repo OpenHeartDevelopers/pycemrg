@@ -60,3 +60,6 @@ venv.bak/
 # IDE files
 .idea/
 .vscode/
+
+models.yaml
+labels.yaml

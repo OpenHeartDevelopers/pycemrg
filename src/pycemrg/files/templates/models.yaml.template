@@ -1,0 +1,18 @@
+# pycemrg Model Manifest
+# Defines ML models, their versions, and download locations.
+
+my_segmenter:
+  default: v1.0
+  versions:
+    v1.0:
+      url: "https://example.com/path/to/your/segmenter-v1.0.zip"
+      unzipped_target_path: "weights/final.pth"
+      sha256: "sha256_hash_of_the_zip_file"
+
+my_classifier:
+  default: v1.0-local
+  versions:
+    v1.0-local:
+      url: "file://./local_models/classifier.pth"
+      unzipped_target_path: "classifier.pth"
+      
