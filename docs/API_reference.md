@@ -1,13 +1,13 @@
 ### **`pycemrg` API Reference: Model & Label Management**
 
 **Overview:**
-The `pycemrg` library provides a decoupled, configuration-driven system for managing Machine Learning models and anatomical labels. The core principle is that the library is stateless and generic; the consuming application provides YAML files to configure its behavior.
-
+The pycemrg library provides a decoupled, configuration-driven system for managing common development and research tasks, including Machine Learning models, anatomical labels, and system command execution. The core principle is that the library is stateless and generic; the consuming application provides configuration to direct its behavior.
 The typical workflow is:
-1.  (Optional) Use the `ConfigScaffolder` or the `pycemrg` CLI to generate template `models.yaml` and `labels.yaml` files.
-2.  Populate these YAML files with application-specific data.
-3.  Instantiate `ModelManager` and `LabelManager` with the paths to these configuration files.
-4.  Use the manager instances to retrieve model paths and translate label values.
+
+1. (Optional) Use the ConfigScaffolder or the pycemrg CLI to generate template configuration files.
+2. Populate these YAML files with application-specific data.
+3. Instantiate the required managers (ModelManager, LabelManager, CommandRunner).
+4. Use the manager instances to retrieve model paths, translate label values, and execute external processes.
 
 ---
 
@@ -101,7 +101,6 @@ from pathlib import Path
 # The path to your application's labels.yaml is required.
 label_manager = LabelManager(config_path=Path("path/to/your/labels.yaml"))
 ```
-
 **Methods:**
 
 #### `.get_value()`
@@ -137,9 +136,56 @@ Translates a list of strings into a sorted, unique list of integer label values.
 *   **Raises:**
     *   `KeyError`: If any name in the list is not a valid label, group, or digit.
 
+### 4. System Command Execution
+
+**Entry point:** `pycemrg.system.CommandRunner`
+
+A robust utility for safely running and logging external shell commands. It provides a consistent interface for executing system processes, capturing their output, and validating results without using an insecure shell.
+
+```python 
+import logging
+from pycemrg.system import CommandRunner
+
+# Basic instantiation, uses a default logger
+runner = CommandRunner()
+
+# Optionally, inject an application-specific logger for unified log handling
+app_logger = logging.getLogger("my_application")
+runner = CommandRunner(logger=app_logger)
+```
+
+**Methods**:
+
+`.run()`
+
+Executes a command safely, captures its output, and handles errors.
+* **Signature**: `(cmd: Sequence[Union[str, Path]], expected_outputs: Optional[Sequence[Path]] = None, cwd: Optional[Path] = None, ignore_errors: Optional[Sequence[str]] = None) -> str`
+* **Args**:
+  * `cmd` (Sequence[str | Path]): A sequence of command parts (e.g., `['docker', 'run', Path('/tmp')]`). Each part is converted to a string.
+  * `expected_outputs` (Optional[Sequence[Path]]): A sequence of `pathlib.Path` objects that are expected to exist after a successful run.
+  * `cwd` (Optional[Path]): The working directory from which to run the command.
+  * `ignore_errors` (Optional[Sequence[str]]): A sequence of strings. If the command fails but one of these strings is found in stderr, the error is treated as a warning and no exception is raised.
+* **Returns**:
+  * `str`: The captured stdout from the command.
+* **Raises**:
+  * `pycemrg.system.CommandExecutionError`: If the command returns a non-zero exit code and the error is not in the ignore_errors list.
+  * `FileNotFoundError`: If the command completes successfully but an expected_output file is missing.
+
+**Associated Exception**:
+
+`pycemrg.system.CommandExecutionError`
+
+A custom exception raised by `CommandRunner.run()` on failure. It is a subclass of RuntimeError and provides rich context for programmatic error handling.
+
+* **Attributes**:
+  * `.returncode` (int): The exit code of the failed command.
+  * `.stdout` (str): The captured standard output from the command.
+  * `.stderr` (str): The captured standard error from the command.
+
+
 ---
 
-### 4. Command-Line Interface (CLI)
+### 5. Command-Line Interface (CLI)
 
 For interactive use, the library provides a CLI to perform scaffolding.
 
