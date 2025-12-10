@@ -55,7 +55,7 @@ class ModelManager:
             logger.debug(f"No hash provided for {file_path.name}. Skipping verification.")
             return True
         
-        hasher = hashlib.sha25Required()
+        hasher = hashlib.sha256()
         with open(file_path, 'rb') as f:
             while chunk := f.read(8192):
                 hasher.update(chunk)
