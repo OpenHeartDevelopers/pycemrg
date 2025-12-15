@@ -185,7 +185,104 @@ A custom exception raised by `CommandRunner.run()` on failure. It is a subclass 
 
 ---
 
-### 5. Command-Line Interface (CLI)
+### 5. CARPentry Command Execution
+
+**Entry Point:** `pycemrg.system.CarpRunner`
+
+A specialized runner for executing commands from the CARPentry/openCARP ecosystem. Its primary responsibility is to correctly source the `config.sh` file from a CARPentry installation, setting up the complex environment (`PATH`, `PYTHONPATH`, license variables, etc.) before delegating execution to a generic `CommandRunner`.
+
+**Instantiation:**
+
+There are two primary ways to initialize the `CarpRunner`: by providing an explicit path or by using the auto-discovery class method.
+
+*   **1. Explicit Path (Recommended):**
+
+    ```python
+    import logging
+    from pycemrg.system import CommandRunner, CarpRunner
+    
+    # A generic CommandRunner is required
+    runner = CommandRunner()
+    
+    # Instantiate CarpRunner with the path to the installation's config.sh
+    carp_runner = CarpRunner(
+        runner=runner,
+        carp_config_path="/path/to/your/carpentry_bundle/config.sh"
+    )
+    ```
+
+*   **2. Auto-Discovery:**
+
+    ```python
+    # Use the classmethod to find the config file in common locations
+    config_path = CarpRunner.find_installation()
+
+    if config_path:
+        carp_runner = CarpRunner(runner=runner, carp_config_path=config_path)
+    else:
+        raise RuntimeError("Could not automatically locate CARPentry installation.")
+    ```
+
+**Methods & Properties:**
+
+#### `.run()`
+Execute a command within the fully configured CARPentry environment.
+
+*   **Signature:** `(cmd: Sequence[Union[str, Path]], expected_outputs: Optional[Sequence[Path]] = None, cwd: Optional[Path] = None, ignore_errors: Optional[Sequence[str]] = None) -> str`
+*   **Args:**
+    *   `cmd` (Sequence[str | Path]): Command to execute (e.g., `['openCARP', '+F', 'sim.par']`).
+    *   *Other arguments are passed directly to the underlying `CommandRunner.run()` method.*
+*   **Returns:**
+    *   `str`: The captured `stdout` from the command.
+*   **Raises:**
+    *   `pycemrg.system.CommandExecutionError`: If the command fails.
+    *   `pycemrg.system.CarpEnvironmentError`: If the CARPentry environment fails to load.
+    *   `FileNotFoundError`: If expected outputs are missing after a successful run.
+
+#### `.carp_env`
+A read-only property that returns the loaded CARPentry environment. The environment is lazy-loaded on first access and cached.
+
+*   **Type:** `property`
+*   **Returns:**
+    *   `Dict[str, str]`: A dictionary of all environment variables sourced from `config.sh`.
+
+#### `.installation_root`
+A read-only property that returns the root directory of the CARPentry installation.
+
+*   **Type:** `property`
+*   **Returns:**
+    *   `pathlib.Path`: The absolute path to the CARPentry installation directory.
+
+#### `.validate_command_exists()`
+Checks if a specific command (e.g., `openCARP`, `meshtool`) is available in the sourced environment's `PATH`.
+
+*   **Signature:** `(command: str) -> bool`
+*   **Args:**
+    *   `command` (str): The name of the executable to check.
+*   **Returns:**
+    *   `bool`: `True` if the command is found and executable, `False` otherwise.
+
+#### `.find_installation()`
+A class method to search for a `config.sh` file in a list of common installation directories.
+
+*   **Signature:** `(search_paths: Optional[Sequence[Path]] = None) -> Optional[Path]`
+*   **Type:** `classmethod`
+*   **Args:**
+    *   `search_paths` (Optional[Sequence[Path]]): A list of directories to search. If `None`, a default list of common locations is used (e.g., `~/carpentry_bundle`, `/opt/CARPentry`).
+*   **Returns:**
+    *   `Optional[pathlib.Path]`: The path to the first `config.sh` file found, or `None`.
+
+**Other Utility Methods:**
+The class also provides several helper methods for convenience: `reload_environment()`, `get_carp_path()`, `get_carputils_settings_path()`, and `get_license_path()`.
+
+**Associated Exception:**
+
+#### `pycemrg.system.CarpEnvironmentError`
+A custom exception raised by `CarpRunner` if it fails to source or validate the CARPentry environment from the `config.sh` file. This can happen if the file is corrupted, incomplete, or the sourcing command fails. It is a subclass of `RuntimeError`.
+
+---
+
+### 6. Command-Line Interface (CLI)
 
 For interactive use, the library provides a CLI to perform scaffolding.
 
