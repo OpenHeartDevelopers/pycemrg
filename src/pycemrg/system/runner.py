@@ -3,7 +3,7 @@
 import subprocess
 import logging
 from pathlib import Path
-from typing import List, Union, Optional, Sequence
+from typing import List, Union, Optional, Sequence, Dict
 
 # A custom exception provides more context to the caller upon failure.
 class CommandExecutionError(RuntimeError):
@@ -37,8 +37,10 @@ class CommandRunner:
         cmd: Sequence[Union[str, Path]],
         expected_outputs: Optional[Sequence[Path]] = None,
         cwd: Optional[Path] = None,
-        ignore_errors: Optional[Sequence[str]] = None
+        ignore_errors: Optional[Sequence[str]] = None,
+        env: Optional[Dict[str, str]] = None  # ADD THIS LINE
     ) -> str:
+
         """
         Executes a command safely without using a shell.
 
@@ -51,6 +53,9 @@ class CommandRunner:
             ignore_errors (Optional[Sequence[str]]): A sequence of strings. If any of these
                 strings are found in stderr, the error is logged as a warning
                 but does not raise an exception.
+            env: Optional environment variables dict. If None, inherits current
+                process environment. If provided, subprocess uses only these
+                environment variables.
 
         Returns:
             str: The captured stdout from the command.
@@ -72,8 +77,10 @@ class CommandRunner:
                 cwd=cwd,
                 capture_output=True,
                 text=True,
-                check=False  # We handle the return code manually for richer error handling
+                check=False,
+                env=env  
             )
+
         except Exception as e:
             self.logger.error(f"Failed to launch command: {cmd_log_str}", exc_info=True)
             raise e
