@@ -64,3 +64,7 @@ class LabelManager:
                 )
         
         return sorted(list(final_values))
+    
+    def get_tags_string(self, names: List[str], separator: str = ',') -> str :
+        list_of_values = self.get_values_from_names(names) 
+        return separator.join(list_of_values)
