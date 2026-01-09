@@ -77,5 +77,4 @@ class LabelManager:
             flat_names = names
 
         list_of_values = self.get_values_from_names(flat_names)
-        return separator.join(list_of_values)
-
+        return separator.join(map(str, list_of_values))
