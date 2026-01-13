@@ -3,7 +3,7 @@
 import yaml
 import itertools
 from pathlib import Path
-from typing import Union, List, Set
+from typing import Union, List, Set, Dict
 
 
 class LabelManager:
@@ -78,3 +78,62 @@ class LabelManager:
 
         list_of_values = self.get_values_from_names(flat_names)
         return separator.join(map(str, list_of_values))
+
+
+class LabelMapper:
+    """
+    Creates a mapping between two different label standards.
+
+    This class uses composition, taking two configured LabelManager instances—one
+    for a "source" standard and one for a "target" standard—and provides
+    methods to translate between them based on common anatomical names.
+    """
+
+    def __init__(self, source: LabelManager, target: LabelManager):
+        """
+        Initializes the LabelMapper.
+
+        Args:
+            source: A LabelManager instance configured with the source labels.
+            target: A LabelManager instance configured with the target labels.
+        """
+        self.source = source
+        self.target = target
+
+    def get_source_to_target_mapping(self) -> Dict[int, int]:
+        """
+        Generates a dictionary mapping source integer tags to target integer tags.
+
+        It iterates through the anatomical names defined in the source manager,
+        finds the corresponding name in the target manager, and creates a
+        mapping from the source value to the target value.
+
+        Returns:
+            A dictionary of {source_tag: target_tag}.
+        """
+        mapping = {}
+        # We iterate through the source labels' items (name: value)
+        for name, source_value in self.source._labels.items():
+            try:
+                # Find the same name in the target manager
+                target_value = self.target.get_value(name)
+                if source_value != target_value:
+                    mapping[source_value] = target_value
+            except KeyError:
+                # This name exists in source but not target; ignore it.
+                pass
+        return mapping
+
+    def get_source_tags(self, names: List[str]) -> List[int]:
+        """
+        Convenience method to resolve names/groups using the source standard.
+        Equivalent to calling `source_manager.get_values_from_names()`.
+        """
+        return self.source.get_values_from_names(names)
+
+    def get_target_tags(self, names: List[str]) -> List[int]:
+        """
+        Convenience method to resolve names/groups using the target standard.
+        Equivalent to calling `target_manager.get_values_from_names()`.
+        """
+        return self.target.get_values_from_names(names)
