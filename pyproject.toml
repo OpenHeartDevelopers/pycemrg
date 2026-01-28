@@ -1,3 +1,4 @@
+
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
@@ -53,11 +54,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "[Keep your GitHub URL from current file]"
-Documentation = "[Your GitHub URL]/blob/main/docs/API_reference.md"
-Repository = "[Keep your GitHub URL from current file]"
-"Bug Tracker" = "[Your GitHub URL]/issues"
-Changelog = "[Your GitHub URL]/releases"
+Homepage = "https://github.com/OpenHeartDevelopers/pycemrg"
+"Bug Tracker" = "https://github.com/OpenHeartDevelopers/pycemrg/issues"
+Documentation = "https://github.com/OpenHeartDevelopers/pycemrg/blob/main/docs/API_reference.md"
+Repository = "https://github.com/OpenHeartDevelopers/pycemrg"
+Changelog = "https://github.com/OpenHeartDevelopers/pycemrg/releases"
 
 [tool.setuptools.packages.find]
 where = ["src"]
