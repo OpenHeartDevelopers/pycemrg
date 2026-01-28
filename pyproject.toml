@@ -6,28 +6,58 @@ build-backend = "setuptools.build_meta"
 name = "pycemrg"
 version = "0.1.0"
 authors = [
-  { name="Your Name", email="your.email@example.com" },
+  { name="Jose Alonso Solis-Lemus", email="j.solis-lemus@imperial.ac.uk" },
 ]
-description = "Core ML and file management utilities for medical imaging research."
+description = "Core utilities for cardiac medical image analysis workflows"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.8"
+
+keywords = [
+    "cardiac",
+    "medical-imaging",
+    "cardiac-mri",
+    "image-analysis",
+    "mesh-generation",
+    "research-tools",
+]
+
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Image Processing",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
-    "pyyaml>=6.0",
-    "requests>=2.28",
-    "tqdm>=4.64",
-    "click>=8.0", 
-    'importlib-resources; python_version < "3.9"'
+    "pyyaml>=6.0,<7.0",
+    "click>=8.0,<9.0",
+    "tqdm>=4.64,<5.0",
+    'importlib-resources>=5.0,<6.0; python_version < "3.9"',
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "build>=0.10",
+    "twine>=4.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/pycemrg"
-"Bug Tracker" = "https://github.com/your-org/pycemrg/issues"
+Homepage = "[Keep your GitHub URL from current file]"
+Documentation = "[Your GitHub URL]/blob/main/docs/API_reference.md"
+Repository = "[Keep your GitHub URL from current file]"
+"Bug Tracker" = "[Your GitHub URL]/issues"
+Changelog = "[Your GitHub URL]/releases"
 
 [tool.setuptools.packages.find]
 where = ["src"]
