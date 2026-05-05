@@ -63,3 +63,7 @@ venv.bak/
 
 models.yaml
 labels.yaml
+
+.claude/**
+.claude/
+CLAUDE.md

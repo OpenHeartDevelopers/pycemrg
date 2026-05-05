@@ -2,7 +2,8 @@
 
 import click
 from pathlib import Path
-from pycemrg.files import ConfigScaffolder  
+from pycemrg.files import ConfigScaffolder, ProjectScaffolder
+from pycemrg.files.project import InvalidProjectNameError
 
 @click.group()
 def main():
@@ -67,6 +68,55 @@ def init_labels(output: Path, force: bool, num_labels: int, num_groups: int):
         click.echo("Use the --force flag to overwrite.")
     except Exception as e:
         click.secho(f"An error occurred: {e}", fg="red")
+
+@main.command('init', help="Scaffold a new project that consumes the pycemrg suite.")
+@click.argument('name')
+@click.option(
+    '--path', '-p',
+    default=Path('.'),
+    type=click.Path(file_okay=False, writable=True, path_type=Path),
+    help="Parent directory in which to create the project folder."
+)
+@click.option(
+    '--with-src',
+    is_flag=True,
+    help="Also create src/<name>/ for stateless library code."
+)
+@click.option(
+    '--force',
+    is_flag=True,
+    help="Write into the project directory even if it already exists and is non-empty."
+)
+def init_project(name: str, path: Path, with_src: bool, force: bool):
+    """Generate a starter project skeleton for the pycemrg suite."""
+    scaffolder = ProjectScaffolder()
+    try:
+        project_root = scaffolder.create_project(
+            name=name,
+            parent_dir=path,
+            with_src=with_src,
+            force=force,
+        )
+    except InvalidProjectNameError as e:
+        click.secho(str(e), fg="red")
+        raise click.exceptions.Exit(code=2)
+    except FileExistsError as e:
+        click.secho(str(e), fg="yellow")
+        click.echo("Use --force to write into it anyway.")
+        raise click.exceptions.Exit(code=1)
+    
+    project_env_name = project_root.name.replace('-', '_')
+
+    click.secho(f"Created project at: {project_root}", fg="green")
+    click.echo("Next steps:")
+    click.echo(f"  cd {project_root}")
+    click.echo(f"  conda create --name {project_env_name} python=3.10 && conda activate {project_env_name}")
+    click.echo("  pip install -e .\n")
+    click.echo("Optional steps:")
+    click.echo("  pycemrg init-labels -o config/labels.yaml")
+    click.echo("  pycemrg init-models -o config/models.yaml")
+    click.echo("  python scripts/example_run.py")
+
 
 if __name__ == '__main__':
     main()
