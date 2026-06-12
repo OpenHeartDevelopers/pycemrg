@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pycemrg"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
   { name="Jose Alonso Solis-Lemus", email="j.solis-lemus@imperial.ac.uk" },
 ]
@@ -63,6 +63,9 @@ Changelog = "https://github.com/OpenHeartDevelopers/pycemrg/releases"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"pycemrg.files.templates" = ["*.template"]
 
 [project.scripts]
 pycemrg = "pycemrg.cli:main"
