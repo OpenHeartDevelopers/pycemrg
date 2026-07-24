@@ -38,7 +38,8 @@ class CommandRunner:
         expected_outputs: Optional[Sequence[Path]] = None,
         cwd: Optional[Path] = None,
         ignore_errors: Optional[Sequence[str]] = None,
-        env: Optional[Dict[str, str]] = None  # ADD THIS LINE
+        env: Optional[Dict[str, str]] = None,
+        dry_run: bool = False,
     ) -> str:
 
         """
@@ -66,10 +67,8 @@ class CommandRunner:
             FileNotFoundError: If the command completes successfully but an
                 expected output file is missing.
         """
-        # Convert all command parts to strings for subprocess
-        cmd_str_list = [str(c) for c in cmd]
-        cmd_log_str = " ".join(cmd_str_list)
-        self.logger.info(f"Executing command: {cmd_log_str}")
+        cmd_str_list = self._parse_command(cmd=cmd)
+        cmd_log_str = self._render_command(cmd_str_list=cmd_str_list)
 
         try:
             result = subprocess.run(
@@ -134,3 +133,28 @@ class CommandRunner:
             raise FileNotFoundError(f"Command finished but required outputs are missing: {missing_str}")
         
         self.logger.debug("All expected outputs found.")
+
+    def _parse_command(
+            self,
+            cmd: Sequence[Union[str, Path]],
+        ) -> List[str]:
+        # Convert all command parts to strings for subprocess
+        cmd_str_list = [str(c) for c in cmd]
+        return cmd_str_list
+
+    def _render_command(
+            self, 
+            cmd_str_list: List[str],
+        ) -> str:
+            cmd_log_str = " ".join(cmd_str_list)
+            return cmd_log_str
+
+    def dry_run(
+            self, 
+            cmd: Sequence[Union[str, Path]],
+        ) -> None:
+
+        cmd_str_list = self._parse_command(cmd=cmd)
+        cmd_log_str = self._render_command(cmd_str_list=cmd_str_list)
+
+        self.logger.info(f"[dry-run] Would execute: {cmd_log_str}")
