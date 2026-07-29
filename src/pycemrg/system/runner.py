@@ -57,9 +57,13 @@ class CommandRunner:
             env: Optional environment variables dict. If None, inherits current
                 process environment. If provided, subprocess uses only these
                 environment variables.
+            dry_run (bool): If True, log the command that would be run and
+                return without launching it. No subprocess is started and
+                `expected_outputs` is not validated.
 
         Returns:
-            str: The captured stdout from the command.
+            str: The captured stdout from the command, or an empty string when
+                `dry_run` is True.
 
         Raises:
             CommandExecutionError: If the command returns a non-zero exit code
@@ -69,6 +73,10 @@ class CommandRunner:
         """
         cmd_str_list = self._parse_command(cmd=cmd)
         cmd_log_str = self._render_command(cmd_str_list=cmd_str_list)
+
+        if dry_run:
+            self.dry_run(cmd=cmd)
+            return ""
 
         try:
             result = subprocess.run(

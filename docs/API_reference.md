@@ -456,15 +456,16 @@ runner = CommandRunner(logger=app_logger)
 ### `.run()`
 Executes a command safely, captures its output, and handles errors.
 
-*   **Signature:** `(cmd: Sequence[Union[str, Path]], expected_outputs: Optional[Sequence[Path]] = None, cwd: Optional[Path] = None, ignore_errors: Optional[Sequence[str]] = None, env: Optional[Dict[str, str]] = None) -> str`
+*   **Signature:** `(cmd: Sequence[Union[str, Path]], expected_outputs: Optional[Sequence[Path]] = None, cwd: Optional[Path] = None, ignore_errors: Optional[Sequence[str]] = None, env: Optional[Dict[str, str]] = None, dry_run: bool = False) -> str`
 *   **Args:**
     *   `cmd` (Sequence[str | Path]): A sequence of command parts (e.g., `['docker', 'run', Path('/tmp')]`). Each part is converted to a string. **Never passed to a shell interpreter.**
     *   `expected_outputs` (Optional[Sequence[Path]]): A sequence of `pathlib.Path` objects that are expected to exist after a successful run. If any are missing, raises `FileNotFoundError`.
     *   `cwd` (Optional[Path]): The working directory from which to run the command.
     *   `ignore_errors` (Optional[Sequence[str]]): A sequence of strings. If the command fails but one of these strings is found in stderr, the error is treated as a warning and no exception is raised.
     *   `env` (Optional[Dict[str, str]]): Environment variables dict. If `None`, inherits the current process environment. **If provided, replaces the entire environment** (use with caution or merge with `os.environ`).
+    *   `dry_run` (bool): If `True`, log the command that would be run and return immediately. No subprocess is launched, `expected_outputs` is **not** validated, and no exception can be raised. Defaults to `False`.
 *   **Returns:**
-    *   `str`: The captured stdout from the command.
+    *   `str`: The captured stdout from the command, or an empty string when `dry_run` is `True`.
 *   **Raises:**
     *   `CommandExecutionError`: If the command returns a non-zero exit code and the error is not in the `ignore_errors` list.
     *   `FileNotFoundError`: If the command completes successfully but an `expected_output` file is missing.
@@ -495,12 +496,50 @@ runner.run(
     cmd=['python', 'train.py'],
     env=custom_env
 )
+
+# Preview without executing; returns "" and touches nothing
+runner.run(
+    cmd=['meshtool', 'extract', 'mesh', '-msh=heart'],
+    expected_outputs=[Path('heart_epi.surf')],
+    dry_run=True
+)
+# Logs: [dry-run] Would execute: meshtool extract mesh -msh=heart
 ```
+
+---
+
+### `.dry_run()`
+Logs the command that would be executed, without running it.
+
+*   **Signature:** `(cmd: Sequence[Union[str, Path]]) -> None`
+*   **Args:**
+    *   `cmd` (Sequence[str | Path]): A sequence of command parts, rendered exactly as `.run()` would render it.
+*   **Returns:**
+    *   `None`.
+
+**Example:**
+```python
+runner = CommandRunner()
+runner.dry_run(['meshtool', 'extract', 'mesh', '-msh=heart'])
+# Logs at INFO: [dry-run] Would execute: meshtool extract mesh -msh=heart
+```
+
+Equivalent to `runner.run(cmd, dry_run=True)`, except that `.run()` returns `""`
+while `.dry_run()` returns `None`. Prefer `run(..., dry_run=True)` when the call
+site is a real invocation being toggled by a flag, so the arguments stay in one
+place; prefer `.dry_run()` when you only ever want to preview.
 
 **Design Rationale:**
 - **Never uses `shell=True`**: Prevents command injection vulnerabilities.
 - **Explicit environment control**: The `env` parameter enables isolated execution (critical for tools like CARPentry that require specific environments).
 - **Validation as first-class concern**: `expected_outputs` catches silent failures where a tool exits successfully but produces no output.
+- **Dry runs short-circuit before the subprocess**: nothing is launched and no output validation runs, so a dry run can never fail on a missing artifact.
+
+> **Changed in 0.1.3:** `.run()` no longer emits an `Executing command: <cmd>`
+> message at INFO before launching. Commands are now logged only via
+> `.dry_run()`, or at DEBUG through captured stdout/stderr. Callers that relied
+> on seeing the invoked command line in INFO-level logs should pass a logger and
+> lower its level, or log the command themselves.
 
 ---
 
